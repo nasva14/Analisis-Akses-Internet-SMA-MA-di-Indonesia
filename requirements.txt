@@ -7,3 +7,5 @@ scikit-learn
 joblib
 openpyxl
 pyngrok
+folium
+streamlit-folium
