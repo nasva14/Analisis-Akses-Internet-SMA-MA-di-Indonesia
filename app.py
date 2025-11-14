@@ -73,17 +73,17 @@ if st.button("🔮 Prediksi Cluster"):
         proporsi = (internet_schools / total_schools) * 100
         st.info(f"📊 Persentase Akses Internet Sekolah: **{proporsi:.2f}%**")
 
-        # Scaling dan prediksi
-        scaled_input = scaler.transform([[proporsi]])
-        prediction = model.predict(scaled_input)[0]
-        prob = model.predict_proba(scaled_input)[0][prediction]
-
-        if prediction == 1:
-            st.error(f"🚨 Wilayah diprediksi **TERTINGGAL** dengan probabilitas {prob:.2f}")
-            st.markdown("💡 *Rekomendasi:* Perlu peningkatan infrastruktur jaringan internet dan pelatihan TIK untuk sekolah di wilayah ini.")
-        else:
-            st.success(f"✅ Wilayah diprediksi **BAIK** dengan probabilitas {prob:.2f}")
+        # ===== RULE-BASED CLUSTERING (90% menjadi batasnya) =====
+        if proporsi >= 90:
+            prediction = 0  # Baik
+            prob = 1.0
+            st.success(f"✅ Wilayah diprediksi **BAIK** (di atas 90%) — Probabilitas: {prob:.2f}")
             st.markdown("🌐 *Insight:* Wilayah ini sudah memiliki infrastruktur digital yang cukup baik untuk mendukung pembelajaran daring.")
+        else:
+            prediction = 1  # Tertinggal
+            prob = 1.0
+            st.error(f"🚨 Wilayah diprediksi **TERTINGGAL** (di bawah 90%) — Probabilitas: {prob:.2f}")
+            st.markdown("💡 *Rekomendasi:* Perlu peningkatan infrastruktur jaringan internet dan pelatihan TIK untuk sekolah di wilayah ini.")
 
 # === 6. UPLOAD DATASET UNTUK PREDIKSI MASSAL ===
 st.header("📂 Upload Dataset untuk Prediksi Batch")
