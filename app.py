@@ -128,10 +128,6 @@ if uploaded_file is not None:
         required_cols = {'Provinsi', 'Jumlah_Sekolah', 'Jumlah_Sekolah_Tersedia_Internet'}
         if not required_cols.issubset(new_df.columns):
             st.error(f"❌ File harus memiliki kolom: {required_cols}")
-        else:
-            missing_coords = new_df[new_df['Latitude'].isna()]['Provinsi'].unique()
-            if len(missing_coords) > 0:
-                st.warning(f"Provinsi berikut tidak memiliki koordinat: {missing_coords}")
 
             # Proses prediksi
             new_df['Persentase_Tersedia'] = (new_df['Jumlah_Sekolah_Tersedia_Internet'] / new_df['Jumlah_Sekolah']) * 100
