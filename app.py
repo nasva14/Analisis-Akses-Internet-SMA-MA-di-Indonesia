@@ -129,9 +129,6 @@ if uploaded_file is not None:
         if not required_cols.issubset(new_df.columns):
             st.error(f"❌ File harus memiliki kolom: {required_cols}")
         else:
-            # Merge Koordinat Provinsi
-            new_df = new_df.merge(coord_df, on='Provinsi', how='left')
-
             missing_coords = new_df[new_df['Latitude'].isna()]['Provinsi'].unique()
             if len(missing_coords) > 0:
                 st.warning(f"Provinsi berikut tidak memiliki koordinat: {missing_coords}")
