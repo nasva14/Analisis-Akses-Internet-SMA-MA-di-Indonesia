@@ -3,47 +3,6 @@ import pandas as pd
 import joblib
 import seaborn as sns
 import matplotlib.pyplot as plt
-from streamlit_folium import st_folium
-import folium
-
-# Tabel Koordinat Provinsi Indonesia
-provinsi_coords = {
-    "Aceh": (-3.644, 96.225),
-    "Sumatera Utara", "Sumut": (2.115, 99.545),
-    "Sumatera Barat", "Sumbar": (-0.739, 100.800),
-    "Riau": (0.293, 101.707),
-    "Jambi": (-1.485, 102.438),
-    "Sumatera Selatan", "Sumsel": (-3.319, 103.914),
-    "Bengkulu": (-3.792, 102.260),
-    "Lampung": (-4.558, 105.406),
-    "Kep. Bangka Belitung", "Kepulauan Bangka Belitung", "K. Bangka Belitung": (-2.741, 106.440),
-    "Kepulauan Riau", "Kep. Riau", "K. Riau": (3.945, 108.142),
-    "DKI Jakarta", "D.K.I. Jakarta", "Jakarta": (-6.2088, 106.8456),
-    "Jawa Barat", "Jabar": (-6.889, 107.640),
-    "Jawa Tengah", "Jateng": (-7.150, 110.140),
-    "DI Yogyakarta", "D.I. Yogyakarta", "Yogyakarta", "Jogja", "Jogjakarta": (-7.797, 110.370),
-    "Jawa Timur", "Jatim": (-7.536, 112.238),
-    "Banten": (-6.405, 106.064),
-    "Bali": (-8.340, 115.092),
-    "Nusa Tenggara Barat", "NTB": (-8.653, 117.361),
-    "Nusa Tenggara Timur", "NTT": (-10.177, 123.593),
-    "Kalimantan Barat", "Kalbar": (-0.278, 109.335),
-    "Kalimantan Tengah", "Kalteng": (-1.681, 113.382),
-    "Kalimantan Selatan", "Kalsel": (-3.319, 114.592),
-    "Kalimantan Timur", "Kaltim": (0.538, 116.419),
-    "Kalimantan Utara", "Kaltara": (3.020, 116.207),
-    "Sulawesi Utara", "Sulut", "Sultara": (1.474, 124.842),
-    "Sulawesi Tengah", "Sulteng": (-1.430, 121.445),
-    "Sulawesi Selatan", "Sulsel": (-5.147, 119.432),
-    "Sulawesi Tenggara": (-4.013, 122.529),
-    "Gorontalo": (0.699, 122.446),
-    "Sulawesi Barat", "Sulbar": (-2.844, 118.876),
-    "Maluku": (-3.238, 130.145),
-    "Maluku Utara": (1.570, 127.808),
-    "Papua Barat": (-1.336, 133.174),
-    "Papua": (-4.269, 138.080)
-}
-
 
 # LOAD MODEL DAN DATA
 model = joblib.load("model_loreg.pkl")
@@ -57,11 +16,6 @@ st.markdown("""
 Dashboard interaktif ini menampilkan hasil *Clustering* dan *Prediksi Logistic Regression*
 berdasarkan proporsi sekolah SMA/MA dengan akses internet di Indonesia.
 """)
-
-# Menambah koordinat ke dataframe
-coord_df = pd.DataFrame.from_dict(provinsi_coords, orient='index', columns=['Latitude', 'Longitude'])
-coord_df.reset_index(inplace=True)
-coord_df.rename(columns={'index': 'Provinsi'}, inplace=True)
 
 # Merge berdasarkan nama provinsi
 df = df.merge(coord_df, on='Provinsi', how='left')
@@ -104,55 +58,6 @@ sns.scatterplot(
 )
 plt.title("Distribusi Cluster Berdasarkan Persentase Akses Internet")
 st.pyplot(plt)
-
-# MAP INTERAKTIF
-st.header("🗺️ Peta Persebaran Akses Internet (Interaktif)")
-
-if {'Latitude', 'Longitude'}.issubset(df.columns):
-
-    # Tampilkan provinsi yang hilang koordinat (debug)
-    missing_main = df[df['Latitude'].isna()]['Provinsi'].unique()
-    if len(missing_main) > 0:
-        st.warning(f"Provinsi berikut tidak memiliki koordinat dan tidak ditampilkan di peta: {missing_main}")
-
-    # Drop provinsi tanpa koordinat agar tidak error Folium
-    map_df_main = df.dropna(subset=['Latitude', 'Longitude'])
-
-    # Buat map
-    m = folium.Map(location=[-2.5, 118], zoom_start=5)
-
-    for _, row in map_df_main.iterrows():
-        # Tentukan kategori berdasarkan persentase
-        if row['Persentase_Tersedia'] >= 90:
-            kategori = "Baik"
-            color = "green"
-            cluster_val = 0
-        else:
-            kategori = "Tertinggal"
-            color = "red"
-            cluster_val = 1
-    
-        popup_text = f"""
-        <b>Provinsi:</b> {row['Provinsi']}<br>
-        <b>Persentase Akses Internet:</b> {row['Persentase_Tersedia']:.2f}%<br>
-        <b>Cluster:</b> {kategori} ({cluster_val})
-        """
-
-        folium.CircleMarker(
-            location=[row['Latitude'], row['Longitude']],
-            radius=7,
-            color=color,
-            fill=True,
-            fill_color=color,
-            popup=popup_text,
-            tooltip=row['Provinsi']
-        ).add_to(m)
-
-    st_folium(m, width=900, height=500)
-
-else:
-    st.warning("Dataset utama belum memiliki kolom Latitude & Longitude untuk memvisualisasikan peta.")
-
 
 # PREDIKSI LOGISTIC REGRESSION
 st.header("🤖 Prediksi Menggunakan Logistic Regression")
@@ -253,53 +158,6 @@ if uploaded_file is not None:
             sns.barplot(data=new_df, x='Provinsi', y='Persentase_Tersedia', hue='Prediksi_Cluster', palette='coolwarm', ax=ax)
             plt.xticks(rotation=90)
             st.pyplot(fig)
-
-            # Visualisasi hasil (Map)
-            st.subheader("🗺️ Peta Persebaran Prediksi (Interaktif)")
-            
-            if {'Latitude', 'Longitude'}.issubset(new_df.columns):
-            
-                # Filter hanya baris dengan koordinat valid
-                map_df = new_df.dropna(subset=['Latitude', 'Longitude'])
-            
-                # Peringatan jika ada provinsi tidak punya koordinat
-                missing_coords = new_df[new_df['Latitude'].isna()]['Provinsi'].unique()
-                if len(missing_coords) > 0:
-                    st.warning(f"Provinsi berikut tidak memiliki koordinat sehingga tidak muncul di peta: {missing_coords}")
-            
-                if map_df.empty:
-                    st.error("❌ Tidak ada baris dengan koordinat valid untuk ditampilkan di peta.")
-                else:
-                    m2 = folium.Map(location=[-2.5, 118], zoom_start=5)
-            
-                    for _, row in map_df_main.iterrows():
-                        # Tentukan kategori berdasarkan persentase
-                        if row['Persentase_Tersedia'] >= 90:
-                            kategori = "Baik"
-                            color = "green"
-                            cluster_val = 0
-                        else:
-                            kategori = "Tertinggal"
-                            color = "red"
-                            cluster_val = 1
-                    
-                        popup_text = f"""
-                        <b>Provinsi:</b> {row['Provinsi']}<br>
-                        <b>Persentase Akses Internet:</b> {row['Persentase_Tersedia']:.2f}%<br>
-                        <b>Cluster:</b> {kategori} ({cluster_val})
-                        """
-                        
-                        folium.Marker(
-                            location=[row['Latitude'], row['Longitude']],
-                            popup=popup_text,
-                            tooltip=row['Provinsi'],
-                            icon=folium.Icon(color="green" if row['Prediksi_Cluster']==0 else "red")
-                        ).add_to(m2)
-            
-                    st_folium(m2, width=900, height=500)
-            
-            else:
-                st.warning("Dataset upload belum memiliki kolom Latitude & Longitude sehingga peta tidak dapat ditampilkan.")
 
             # Unduh hasil
             csv = new_df.to_csv(index=False).encode('utf-8')
