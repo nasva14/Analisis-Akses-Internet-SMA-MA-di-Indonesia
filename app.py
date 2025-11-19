@@ -128,7 +128,7 @@ if uploaded_file is not None:
         required_cols = {'Provinsi', 'Jumlah_Sekolah', 'Jumlah_Sekolah_Tersedia_Internet'}
         if not required_cols.issubset(new_df.columns):
             st.error(f"❌ File harus memiliki kolom: {required_cols}")
-
+        else:
             # Proses prediksi
             new_df['Persentase_Tersedia'] = (new_df['Jumlah_Sekolah_Tersedia_Internet'] / new_df['Jumlah_Sekolah']) * 100
             scaled = scaler.transform(new_df[['Persentase_Tersedia']])
@@ -137,12 +137,7 @@ if uploaded_file is not None:
 
             st.dataframe(new_df[['Provinsi', 'Persentase_Tersedia', 'Prediksi_Cluster', 'Probabilitas']].head(10))
 
-            # Rule-based prediction untuk new_df
-            new_df['Persentase_Tersedia'] = pd.to_numeric(new_df['Persentase_Tersedia'], errors='coerce')
-            new_df['Prediksi_Cluster_Rule'] = new_df['Persentase_Tersedia'].apply(lambda x: 0 if pd.notna(x) and x >= 90 else 1)
-            new_df['Prediksi_Label'] = new_df['Prediksi_Cluster_Rule'].map({0: 'Baik', 1: 'Tertinggal'})
-
-            # Visualisasi hasil (Diagram)
+            # Visualisasi hasil
             st.subheader("📊 Distribusi Prediksi per Provinsi")
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.barplot(data=new_df, x='Provinsi', y='Persentase_Tersedia', hue='Prediksi_Cluster', palette='coolwarm', ax=ax)
